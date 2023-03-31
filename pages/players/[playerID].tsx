@@ -131,7 +131,7 @@ const PlayerCard = ({
           value={(view as string) || "standings"}
           defaultValue={(view as string) || "standings"}
           onTabChange={async (value) => {
-            await push({ query: { ...query, view: value } });
+            await push({ query: { ...query, view: value } }, undefined, { shallow: true });
           }}
         >
           <Tabs.List position="center">
@@ -171,13 +171,8 @@ const PlayerCard = ({
 
 export const getServerSideProps: GetServerSideProps<any, { playerID: string }> = async ({
   params,
-  query,
-  res,
 }) => {
   const { playerID } = params!;
-  const { view } = query;
-
-  const viewPlayerMatches = view === "recentMatches";
 
   let playerData = null;
   let playerMatchesData = null;
@@ -186,9 +181,7 @@ export const getServerSideProps: GetServerSideProps<any, { playerID: string }> =
   try {
     const PromisePlayerCardData = getPlayerCardInfo(playerID);
 
-    const PromisePlayerMatchesData = viewPlayerMatches
-      ? getPlayerRecentMatches(playerID)
-      : Promise.resolve();
+    const PromisePlayerMatchesData = getPlayerRecentMatches(playerID);
 
     const [playerAPIData, PlayerMatchesAPIData] = await Promise.all([
       PromisePlayerCardData,
@@ -196,7 +189,7 @@ export const getServerSideProps: GetServerSideProps<any, { playerID: string }> =
     ]);
 
     playerData = processPlayerInfoAPIResponse(playerAPIData);
-    playerMatchesData = viewPlayerMatches ? PlayerMatchesAPIData : null;
+    playerMatchesData = PlayerMatchesAPIData;
   } catch (e: any) {
     console.error(`Failed getting data for player id ${playerID}`);
     console.error(e);
